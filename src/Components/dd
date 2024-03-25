@@ -1,0 +1,177 @@
+// import Box from '@mui/material/Box';
+// import FormControlLabel from '@mui/material/FormControlLabel';
+// import Radio from '@mui/material/Radio';
+// import { onAuthStateChanged } from 'firebase/auth';
+// import { collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc } from 'firebase/firestore';
+// import React, { useCallback, useEffect, useState } from 'react';
+// import Button from 'react-bootstrap/Button';
+// import { auth, firestore } from '../firebase'; // Import firestore and auth correctly
+// import './Styles.css';
+
+// export default function Home() {
+//   const [selectedCompetitor, setSelectedCompetitor] = useState(null);
+//   const [hasVoted, setHasVoted] = useState(false);
+//   const [competitors, setCompetitors] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   const handleCompetitorChange = useCallback((competitors) => {
+//     setSelectedCompetitor(competitors);
+//   }, []);
+
+
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     const user = auth.currentUser;
+    
+//     if (!user) {
+//       alert('You need to be logged in to vote.');
+//       return;
+//     }
+
+//     if (selectedCompetitor !== null && !hasVoted) {
+//       try {
+//         const docRef = doc(firestore, 'competitors', 'aZ39KXXmv7tCpPpowV5e');
+
+//         const docSnapshot = await getDoc(docRef);
+
+//         if (docSnapshot.exists()) {
+//           const currentCompValue = docSnapshot.data()[`comp${selectedCompetitor}`];
+//           await updateDoc(docRef, {
+//             timestamp: serverTimestamp(),
+//             [`comp${selectedCompetitor}`]: currentCompValue + 1,
+//           });
+
+//           await updateDoc(doc(firestore, 'users', user.uid), {
+//             hasVoted: true,
+//           });
+
+//           localStorage.setItem('hasVoted', 'true');
+//           setHasVoted(true);
+//         }
+
+//         alert('Successfully voted');
+//         setSelectedCompetitor(null);
+
+//       } catch (error) {
+//         console.error('Error voting: ', error);
+//       }
+//     } else {
+//       alert('You have already voted');
+//     }
+//   };
+
+//   useEffect(() => {
+//     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+//       if (user) {
+//         // User is signed in.
+//         console.log('User is signed in:', user);
+
+//         try {
+//           // Check if the user has voted on component mount
+//           const docRef = doc(firestore, 'users', user.uid);
+//           const docSnapshot = await getDoc(docRef);
+
+//           if (docSnapshot.exists()) {
+//             const hasVotedStorage = docSnapshot.data().hasVoted;
+//             console.log(hasVoted);
+
+//             if (hasVotedStorage) {
+//               setHasVoted(true);
+//             } else {
+//               setHasVoted(false);
+//             }
+//           }
+//         } catch (error) {
+//           console.error('Error checking voting status: ', error);
+//         }
+//       } else {
+//         // User is signed out.
+//         console.log('User is signed out');
+//         console.log(hasVoted);
+//         setHasVoted(false);
+//         // You may want to redirect the user to the login page or handle the sign-out scenario.
+//       }
+//     });
+
+//     return () => unsubscribe(); // Cleanup on component unmount
+//   }, []);
+
+//    const fetchCompetitors = async () => {
+//     try {
+
+
+     
+//       const q = query(collection(firestore, 'competitors'));
+//       const querySnapshot = await getDocs(q);
+
+//       const competitorData = [];
+//       querySnapshot.forEach((doc) => {
+//         competitorData.push({ id: doc.id, ...doc.data() });
+//       });
+
+//       setCompetitors(competitorData);
+//       console.log(competitorData);
+//       setLoading(false);
+//     } catch (error) {
+//       console.error('Error fetching competitors:', error.message);
+//       setLoading(false);
+//       console.log(error.message);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchCompetitors();
+//   }, []);
+
+
+
+//   return (
+//     <form onSubmit={handleSubmit}>
+//       <div>
+//         <br /> <br></br>
+        
+//         <Box sx={{ display: 'flex', flexDirection: 'column', ml: 3 }}>
+//           <FormControlLabel
+//             label={`1 competitor`}
+//             control={
+//               <Radio
+//                 checked={selectedCompetitor === 1}
+//                 onChange={() => handleCompetitorChange(1)}
+//               />
+//             }
+//           />
+//           <FormControlLabel
+//             label={`2 competitor `}
+//             control={
+//               <Radio
+//                 checked={selectedCompetitor === 2}
+//                 onChange={() => handleCompetitorChange(2)}
+//               />
+//             }
+//           />
+//         </Box>
+
+//         <Button
+//           variant="primary"
+//           size="lg"
+//           className="custom-button2"
+//           type="submit"
+//           style={{
+//             marginRight: '10px',
+//             background:
+//               'linear-gradient(to right, rgba(101, 126, 234, 0.9), rgba(118, 75, 162, 0.9))',
+//           }}
+//         >
+//           Submit
+//         </Button>
+
+       
+//       </div>
+
+    
+
+//     </form>
+//   );
+// }
