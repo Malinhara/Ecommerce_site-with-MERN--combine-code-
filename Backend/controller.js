@@ -37,6 +37,9 @@ app.use(session({
 app.post('/register', userService.registerUser);
 app.post('/login',userService.loginUser); // Add login route
 app.post('/addProduct', productService.addProduct);
+app.put('/products/update/:Id', productService.updateProduct);
+app.delete('/products/delete/:Id', productService.deleteProduct);
+app.get('/products', productService.getAllProducts);
 
 app.listen(3001, () => {
   console.log(`Server is running on port 3001`);
