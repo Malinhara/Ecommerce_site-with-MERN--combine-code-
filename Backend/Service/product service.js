@@ -1,18 +1,28 @@
 const escapeHTML = require('escape-html');
 const Product = require('../model/product model');
+const userservice = require('./User service');
+const {  generatedCode } = require('./User service');
+ // Declare the variable outside the function
+
+//  const nodemailer = require('nodemailer');
+// require('dotenv').config();
+
+
 
 exports.addProduct = async (req, res) => {
-
   try {
-    
-    const sessionID = req.headers['session-id']; // Adjust the header name as per your frontend code
+    const id = userservice.id;
+    const useremail = req.headers['useremail'];
+    const confirmcode = req.headers['confirmationCode'];
+    const sessionID=req.headers['Session-ID'];
 
-    // Check if session ID exists
-    if (!sessionID) {
+   console.log(id);
+
+    if (id ===sessionID) {
       return res.status(409).json({ error: 'Unauthorized: Session ID is missing and Please Relogin' });
     }
 
-
+   
     const sanitizedDesc = escapeHTML(req.body.description).replace(/<\/?[^>]+(>|$)/g, "");
     const sanitizedimgurl = escapeHTML(req.body.imgUrl).replace(/<\/?[^>]+(>|$)/g, "");
     const sanitizediname = escapeHTML(req.body.name).replace(/<\/?[^>]+(>|$)/g, "");
@@ -25,12 +35,16 @@ exports.addProduct = async (req, res) => {
       quantity: req.body.quantity,
       imageUrl: sanitizedimgurl
     });
+
     return res.status(200).json({ message: 'Product added successfully' });
+
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+
 
 
 exports.updateProduct = async (req, res) => {
