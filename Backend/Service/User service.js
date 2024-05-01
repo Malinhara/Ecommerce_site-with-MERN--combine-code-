@@ -3,6 +3,10 @@ const crypto = require('crypto');
 const session = require('express-session');
 const escapeHtml = require('escape-html');
 const Product = require('../model/product model');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+
+
 
 const sessionMiddleware = session({
   secret: 'strong-secret-key',
@@ -18,47 +22,111 @@ const sessionMiddleware = session({
   },
 });
 
+// Declare a variable to store the generated code
+let generatedCode = '';
+
+// Function to generate a random code
+const generateRandomCode = () => {
+  return Math.random().toString(36).substr(2, 6);
+};
+
 exports.loginUser = async (req, res) => {
   try {
-    sessionMiddleware(req, res, async () => {
-      const { email, password } = req.body;
+      sessionMiddleware(req, res, async () => {
+          const { email, password } = req.body;
 
-      // Find the user by email
-      const user = await User.findOne({ email });
+          // Find the user by email
+          const user = await User.findOne({ email });
 
-      if (!user) {
-        console.log('User not found for email:', email);
-        return res.status(409).json({ error: 'Invalid email or password' });
-      }
+          if (!user) {
+              console.log('User not found for email:', email);
+              return res.status(409).json({ error: 'Invalid email or password' });
+          }
 
-      // Split the stored password into salt and hashed password
-      const [salt, storedHashedPassword] = user.password.split(':');
+          // Split the stored password into salt and hashed password
+          const [salt, storedHashedPassword] = user.password.split(':');
 
-      // Hash the provided password with the stored salt
-      const hashedPassword = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha256').toString('hex');
+          // Hash the provided password with the stored salt
+          const hashedPassword = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha256').toString('hex');
 
-      if (hashedPassword === storedHashedPassword) {
-        console.log('Password matched successfully');
-        console.log('Session ID:', req.sessionID);
+          if (hashedPassword === storedHashedPassword) {
+              console.log('Password matched successfully');
 
-        // If the user's email matches the specified email, redirect to the admin panel
-        if (email === 'poorna123@gmail.com') {
-          return  res.status(201).json({ message: 'User Login successfully', redirectTo: '/Adminpannel' });
-        }
+              const id = req.sessionID;
+              console.log('Session ID:', id);
 
-        // Return login success message along with session ID
-        return res.status(201).json({ message: 'Login successful', sessionID: req.sessionID,redirectTo: '/home' });
-      } else {
-        console.log('Password mismatch');
-        return res.status(409).json({ error: 'Invalid password' });
-      }
-    });
+              // Export the id variable for use in other files
+              module.exports.id = id;
+
+              // If the user's email matches the specified email, generate a random code and send it to the email
+              if (email === process.env.ADMIN_EMAIL) {
+                  // Generate a random code
+                  generatedCode = generateRandomCode();
+
+                  // Send email with the random code
+                  const transporter = nodemailer.createTransport({
+                      service: 'gmail',
+                      auth: {
+                          user: process.env.ADMIN_EMAIL,
+                          pass: process.env.ADMIN_PSW
+                      }
+                  });
+
+                  const mailOptions = {
+                      from: process.env.ADMIN_EMAIL,
+                      to: email,
+                      subject: 'Random Code for Login',
+                      text: `Your random code for login is: ${generatedCode}`
+                  };
+
+                  transporter.sendMail(mailOptions, (error, info) => {
+                      if (error) {
+                          console.error('Error sending email:', error);
+                      } else {
+                          console.log('Email sent:', info.response);
+                      }
+                  });
+
+                  return res.status(201).json({ message: 'Random code sent to email', sessionID: req.sessionID, redirectTo: '/AdminHome', generatedCode });
+              }
+              // Return login success message along with session ID
+              return res.status(201).json({ message: 'Login successful', sessionID: req.sessionID, redirectTo: '/home', generatedCode });
+          } else {
+              console.log('Password mismatch');
+              return res.status(409).json({ error: 'Invalid password' });
+          }
+      });
   } catch (error) {
-    console.error('Error logging in:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+      console.error('Error logging in:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
+// Now you can access the generated code using the variable 'generatedCode' anywhere in your program.
+
+
+exports.checkCode = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    console.log(code,generatedCode);
+    // Check if the provided code matches the generated code
+    if (code === generatedCode) {
+      // Clear the generated code after it's been used for verification
+
+      // Return success message
+      return res.status(200).json({ message: 'Code verified successfully' });
+    } else {
+    
+    // Return error message if the code doesn't match
+       return res.status(400).json({ error: 'Invalid code', redirectTo: '/home' });
+ 
+    }
+  } catch (error) {
+    console.error('Error checking code:', error);
+    return res.status(500).json({ error: 'Internal Server Error',redirectTo: '/home' });
+  }
+};
 
 
 exports.registerUser = async (req, res) => {
