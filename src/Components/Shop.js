@@ -1,13 +1,11 @@
+import React, { Component } from "react";
 import {
   MDBCarousel,
   MDBCarouselItem,
 } from 'mdb-react-ui-kit';
-import React, { useEffect, useState } from "react";
 import Button from 'react-bootstrap/Button';
 import Image from 'react-bootstrap/Image';
 import './Styles.css';
-
-
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -19,34 +17,36 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import axios from 'axios';
 
-export default function Shop (){
+class Shop extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      age: '',
+      data: []
+    };
 
+    this.handleChange = this.handleChange.bind(this);
+    this.saveProductInCookie = this.saveProductInCookie.bind(this);
+  }
 
-  const [age, setAge] = React.useState('');
-  const [data,setdata]=useState([])
+  handleChange(event) {
+    this.setState({ age: event.target.value });
+  }
 
-
-  const handleChange = (event) => {
-    setAge(event.target.value);
-  };
-
-
-
-  useEffect(() => {
+  componentDidMount() {
     const fetchData = async () => {
       try {
         const response = await axios.get('http://localhost:3001/product/productIds');
-        setdata( response.data.products);
+        this.setState({ data: response.data.products });
       } catch (error) {
         console.error('Error fetching product IDs:', error);
       }
     };
-  
+
     fetchData();
-  }, []);
+  }
 
-
-  const saveProductInCookie = (product) => {
+  saveProductInCookie(product) {
     // 1. Get existing products from cookie (or initialize empty array)
     let existingProducts = [];
     const cookies = document.cookie.split(';');
@@ -61,18 +61,16 @@ export default function Shop (){
         break;
       }
     }
-  
+
     // 2. Add the new product to the array
     existingProducts.push(product);
-  
+
     // 3. Stringify the updated product array
     const serializedProducts = JSON.stringify(existingProducts);
-  
+
     // 4. Set the cookie with the updated product data and expiry time
     document.cookie = `savedProducts=${serializedProducts}; expires=; path=/`;
   }
-  
-  
 
 
 return(
