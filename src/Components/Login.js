@@ -71,11 +71,8 @@ export default function Login() {
         // If the registration is successful, log the message
         console.log(response);
         alert('User registered successfully');
-        const sessionID = response.data.sessionID;
-
+       
         sessionStorage.setItem('userEmail',formData.email);
-        sessionStorage.setItem('sessionID', sessionID);
-        sessionStorage.setItem('generatedCode', response.data.generatedCode);
         window.location.href = response.data.redirectTo;
       } 
       
