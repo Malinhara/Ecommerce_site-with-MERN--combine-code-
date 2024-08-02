@@ -119,8 +119,7 @@ export default function Register() {
            if (response.status === 201) {
               console.log('User registered successfully');
               alert('User registered successfully');
-              const sessionID = response.data.sessionID;
-              sessionStorage.setItem('sessionID', sessionID);
+             
           }
       }
 
