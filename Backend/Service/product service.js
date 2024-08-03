@@ -2,14 +2,11 @@ const escapeHTML = require('escape-html');
 const Product = require('../model/product model');
 const userservice = require('./User service');
 const {  generatedCode } = require('./User service');
- // Declare the variable outside the function
+const authMiddleware = require('../middleware/authMiddleware'); 
 
-//  const nodemailer = require('nodemailer');
-// require('dotenv').config();
-
-
-
-exports.addProduct = async (req, res) => {
+exports.addProduct = [
+  authMiddleware, // Apply the auth middleware
+  async (req, res) => {
   try {
     const id = userservice.id;
     const useremail = req.headers['useremail'];
@@ -42,12 +39,15 @@ exports.addProduct = async (req, res) => {
     console.error('Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-};
+}
+]
 
 
 
 
-exports.updateProduct = async (req, res) => {
+exports.updateProduct = [
+  authMiddleware, // Apply the auth middleware
+  async (req, res) => {
   try {
 
     const productId = req.params.Id;
@@ -83,11 +83,14 @@ exports.updateProduct = async (req, res) => {
     console.error('Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-};
+}
+]
 
 
 
-exports.deleteProduct = async (req, res) => {
+exports.deleteProduct = [
+  authMiddleware, // Apply the auth middleware
+  async (req, res) => {
   try {
     const productId = req.params.Id;
     const sessionID = req.headers['session-id']; // Adjust the header name as per your frontend code
@@ -108,11 +111,14 @@ exports.deleteProduct = async (req, res) => {
     console.error('Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-};
+}
+]
 
 
 
-exports.getAllProducts = async (req, res) => {
+exports.getAllProducts = [
+  authMiddleware, // Apply the auth middleware
+  async (req, res) => {
   try {
     const products = await Product.find();
     return res.status(200).json({ products });
@@ -121,11 +127,14 @@ exports.getAllProducts = async (req, res) => {
     console.error('Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-};
+}
+]
 
 
 
-exports.getoneProduct = async (req, res) => {
+exports.getoneProduct = [
+  authMiddleware, // Apply the auth middleware
+  async (req, res) => {
   try {
     const productId = req.params.Id; // Get the product ID from request parameters
     const product = await Product.findById(productId); // Find the product by its ID
@@ -137,4 +146,5 @@ exports.getoneProduct = async (req, res) => {
     console.error('Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-};
+}
+]
