@@ -22,6 +22,20 @@ const sessionMiddleware = session({
   },
 });
 
+
+const authMiddleware = (req, res, next) => {
+  if (req.session && req.session.userId) {
+    // User is authenticated
+    next();
+  } else {
+    // User is not authenticated
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+};
+
+
+
+
 // Declare a variable to store the generated code
 let generatedCode = '';
 
@@ -89,6 +103,7 @@ exports.loginUser = async (req, res) => {
 
                   return res.status(201).json({ message: 'Random code sent to email', sessionID: req.sessionID, redirectTo: '/AdminHome', generatedCode });
               }
+              req.session.userId = user._id;
               // Return login success message along with session ID
               return res.status(201).json({ message: 'Login successful', sessionID: req.sessionID, redirectTo: '/home', generatedCode });
           } else {
@@ -131,7 +146,7 @@ exports.checkCode = async (req, res) => {
 
 exports.registerUser = async (req, res) => {
   try {
-    sessionMiddleware(req, res, async () => {
+   
       const { email } = req.body;
       const existingUser = await User.findOne({ email });
 
@@ -148,7 +163,7 @@ exports.registerUser = async (req, res) => {
       });
 
       res.status(201).json({ message: 'User created successfully', user: newUser });
-    });
+  
   } catch (error) {
     console.error('Error inserting user:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
@@ -157,12 +172,15 @@ exports.registerUser = async (req, res) => {
 
 exports.logoutUser = async (req, res) => {
   try {
-    // Clear session data
-    req.session = null;
-    console.log('Session data cleared successfully');
-    console.log(req.session)
-    // Return a response indicating successful logout
-    res.status(200).json({ message: 'Logout successful' });
+    req.session.destroy(err => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
+      console.log('Session data cleared successfully');
+      res.clearCookie('connect.sid', { path: '/' });
+      return res.status(200).json({ message: 'Logout successful' });
+    });
   } catch (error) {
     console.error('Error logging out:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
@@ -171,9 +189,12 @@ exports.logoutUser = async (req, res) => {
 
 
 
-exports.userBuy = async (req, res) => {
+
+exports.userBuy = [
+  authMiddleware, // Apply the auth middleware
+  async (req, res) => {
   try {
-    sessionMiddleware(req, res, async () => {
+  
       const { email, productIds } = req.body;
 
     const sessionID = req.headers['session-id'];
@@ -204,15 +225,17 @@ exports.userBuy = async (req, res) => {
       await existingUser.save();
 
       res.status(200).json({ message: 'Products added to user successfully', user: existingUser });
-    });
+
   } catch (error) {
     console.error('Error updating user:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-};
+}
+];
 
-
-exports.findproduct = async (req, res) => {
+exports.findproduct = [
+  authMiddleware, // Apply the auth middleware
+  async (req, res) => {
   try {
     const { email } = req.body; // Assuming you send the email in the request body
 
@@ -236,4 +259,8 @@ exports.findproduct = async (req, res) => {
     console.error('Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-};
+}
+]
+
+
+module.exports = authMiddleware;
