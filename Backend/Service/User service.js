@@ -66,11 +66,7 @@ exports.loginUser = async (req, res) => {
           if (hashedPassword === storedHashedPassword) {
               console.log('Password matched successfully');
 
-              const id = req.sessionID;
-              console.log('Session ID:', id);
-
-              // Export the id variable for use in other files
-              module.exports.id = id;
+            
 
               // If the user's email matches the specified email, generate a random code and send it to the email
               if (email === process.env.ADMIN_EMAIL) {
@@ -196,13 +192,6 @@ exports.userBuy = [
   try {
   
       const { email, productIds } = req.body;
-
-    const sessionID = req.headers['session-id'];
-    // Check if session ID exists
-    if (!sessionID) {
-      return res.status(409).json({ error: 'Unauthorized: Session ID is missing and Please Relogin' });
-    }
-
 
       const existingUser = await User.findOne({ email });
 
