@@ -66,7 +66,11 @@ exports.loginUser = async (req, res) => {
           if (hashedPassword === storedHashedPassword) {
               console.log('Password matched successfully');
 
-            
+              const id = req.sessionID;
+              console.log('Session ID:', id);
+
+              // Export the id variable for use in other files
+              module.exports.id = id;
 
               // If the user's email matches the specified email, generate a random code and send it to the email
               if (email === process.env.ADMIN_EMAIL) {
