@@ -11,13 +11,7 @@ exports.addProduct = [
     const id = userservice.id;
     const useremail = req.headers['useremail'];
     const confirmcode = req.headers['confirmationCode'];
-    const sessionID=req.headers['Session-ID'];
-
-   console.log(id);
-
-    if (id ===sessionID) {
-      return res.status(409).json({ error: 'Unauthorized: Session ID is missing and Please Relogin' });
-    }
+  
 
    
     const sanitizedDesc = escapeHTML(req.body.description).replace(/<\/?[^>]+(>|$)/g, "");
@@ -51,12 +45,9 @@ exports.updateProduct = [
   try {
 
     const productId = req.params.Id;
-    const sessionID = req.headers['session-id']; // Adjust the header name as per your frontend code
+   
 
-    // Check if session ID exists
-    if (!sessionID) {
-      return res.status(409).json({ error: 'Unauthorized: Session ID is missing and Please Relogin' });
-    }
+
     // Check if the product exists
     const existingProduct = await Product.findById(productId);
     if (!existingProduct) {
@@ -93,13 +84,7 @@ exports.deleteProduct = [
   async (req, res) => {
   try {
     const productId = req.params.Id;
-    const sessionID = req.headers['session-id']; // Adjust the header name as per your frontend code
-
-    // Check if session ID exists
-    if (!sessionID) {
-      return res.status(409).json({ error: 'Unauthorized: Session ID is missing and Please Relogin' });
-    }
-
+  
 
     const deletedProduct = await Product.findByIdAndDelete(productId);
     if (!deletedProduct) {
