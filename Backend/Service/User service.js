@@ -67,7 +67,7 @@ exports.loginUser = async (req, res) => {
               console.log('Password matched successfully');
 
               const id = req.sessionID;
-              console.log('Session ID:', id);
+           
 
               // Export the id variable for use in other files
               module.exports.id = id;
