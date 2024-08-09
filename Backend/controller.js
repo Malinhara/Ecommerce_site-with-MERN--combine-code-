@@ -34,7 +34,7 @@ app.use('/product', productRouter); // Mount productRouter under '/product' path
 
 
 // Connect to MongoDB
-const uri = "mongodb+srv://poornainvest0:123456mp@app.mvyhzcz.mongodb.net/userdb?retryWrites=true&w=majority";
+const uri = "mongodb+srv://poornainvest0:psw@app.mvyhzcz.mongodb.net/userdb?retryWrites=true&w=majority";
 mongoose.connect(uri, {
 })
   .then(() => console.log('Connected to MongoDB Atlas'))
