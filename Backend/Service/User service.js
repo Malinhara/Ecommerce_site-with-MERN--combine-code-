@@ -164,14 +164,22 @@ exports.logoutUser = async (req, res) => {
   try {
     req.session.destroy(err => {
       if (err) {
+        // Log the error
+        logger.log(`Error destroying session: ${err.message}`, req.session.userId || 'N/A', req.session.userName || 'N/A');
         console.error('Error destroying session:', err);
         return res.status(500).json({ error: 'Internal Server Error' });
       }
+      
+      // Log the successful session destruction
+      logger.log('Session data cleared successfully', req.session.userId || 'N/A', req.session.userName || 'N/A');
       console.log('Session data cleared successfully');
+      
       res.clearCookie('connect.sid', { path: '/' });
       return res.status(200).json({ message: 'Logout successful' });
     });
   } catch (error) {
+    // Log the error
+    logger.log(`Error logging out: ${error.message}`, req.session.userId || 'N/A', req.session.userName || 'N/A');
     console.error('Error logging out:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
