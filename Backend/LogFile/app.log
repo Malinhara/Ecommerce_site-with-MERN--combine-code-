@@ -1,0 +1,11 @@
+[2024-08-10T12:45:30.123Z] [UserID: 64d4f1c2a2f8ab0012345678] [UserName: johndoe] Password matched successfully
+[2024-08-10T12:45:31.456Z] [UserID: 64d4f1c2a2f8ab0012345678] [UserName: johndoe] Email sent to johndoe@example.com: 250 OK
+
+[2024-08-10T12:46:10.789Z] [UserID: 64d4f1c2a2f8ab0012345678] [UserName: johndoe] Password mismatch for user: johndoe@example.com
+
+
+[2024-08-10T12:47:15.321Z] [UserID: N/A] [UserName: N/A] Error logging in user: User not found
+
+
+
+This is example data 
