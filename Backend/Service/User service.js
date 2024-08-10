@@ -4,6 +4,7 @@ const session = require('express-session');
 const escapeHtml = require('escape-html');
 const Product = require('../model/product model');
 const nodemailer = require('nodemailer');
+const logger = require('.LogFile/logger'); // Import the logger
 require('dotenv').config();
 
 
@@ -45,76 +46,65 @@ const generateRandomCode = () => {
 };
 
 exports.loginUser = async (req, res) => {
-  try {
-      sessionMiddleware(req, res, async () => {
-          const { email, password } = req.body;
+    try {
+        sessionMiddleware(req, res, async () => {
+            const { email, password } = req.body;
 
-          // Find the user by email
-          const user = await User.findOne({ email });
+            const user = await User.findOne({ email });
 
-          if (!user) {
-              console.log('User not found for email:', email);
-              return res.status(409).json({ error: 'Invalid email or password' });
-          }
+            if (!user) {
+                logger.log(`User not found for email: ${email}`, 'N/A', 'N/A');
+                return res.status(409).json({ error: 'Invalid email or password' });
+            }
 
-          // Split the stored password into salt and hashed password
-          const [salt, storedHashedPassword] = user.password.split(':');
+            const [salt, storedHashedPassword] = user.password.split(':');
+            const hashedPassword = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha256').toString('hex');
 
-          // Hash the provided password with the stored salt
-          const hashedPassword = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha256').toString('hex');
+            if (hashedPassword === storedHashedPassword) {
+                logger.log(`Password matched successfully`, user._id, user.username);
 
-          if (hashedPassword === storedHashedPassword) {
-              console.log('Password matched successfully');
+                const id = req.sessionID;
+                module.exports.id = id;
 
-              const id = req.sessionID;
-           
+                if (email === process.env.ADMIN_EMAIL) {
+                    generatedCode = generateRandomCode();
 
-              // Export the id variable for use in other files
-              module.exports.id = id;
+                    const transporter = nodemailer.createTransport({
+                        service: 'gmail',
+                        auth: {
+                            user: process.env.ADMIN_EMAIL,
+                            pass: process.env.ADMIN_PSW
+                        }
+                    });
 
-              // If the user's email matches the specified email, generate a random code and send it to the email
-              if (email === process.env.ADMIN_EMAIL) {
-                  // Generate a random code
-                  generatedCode = generateRandomCode();
+                    const mailOptions = {
+                        from: process.env.ADMIN_EMAIL,
+                        to: email,
+                        subject: 'Random Code for Login',
+                        text: `Your random code for login is: ${generatedCode}`
+                    };
 
-                  // Send email with the random code
-                  const transporter = nodemailer.createTransport({
-                      service: 'gmail',
-                      auth: {
-                          user: process.env.ADMIN_EMAIL,
-                          pass: process.env.ADMIN_PSW
-                      }
-                  });
+                    transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            logger.log(`Error sending email to ${email}: ${error.message}`, user._id, user.username);
+                        } else {
+                            logger.log(`Email sent to ${email}: ${info.response}`, user._id, user.username);
+                        }
+                    });
 
-                  const mailOptions = {
-                      from: process.env.ADMIN_EMAIL,
-                      to: email,
-                      subject: 'Random Code for Login',
-                      text: `Your random code for login is: ${generatedCode}`
-                  };
-
-                  transporter.sendMail(mailOptions, (error, info) => {
-                      if (error) {
-                          console.error('Error sending email:', error);
-                      } else {
-                          console.log('Email sent:', info.response);
-                      }
-                  });
-
-                  return res.status(201).json({ message: 'Random code sent to email', sessionID: req.sessionID, redirectTo: '/AdminHome', generatedCode });
-              }
-              req.session.userId = user._id;
-              // Return login success message along with session ID
-              return res.status(201).json({ message: 'Login successful', sessionID: req.sessionID, redirectTo: '/home', generatedCode });
-          } else {
-              console.log('Password mismatch');
-              return res.status(409).json({ error: 'Invalid password' });
-          }
-      });
-  } catch (error) {
-      console.error('Error logging in:', error);
-      return res.status(500).json({ error: 'Internal Server Error' });
-  }
+                    return res.status(201).json({ message: 'Random code sent to email', sessionID: req.sessionID, redirectTo: '/AdminHome', generatedCode });
+                }
+                req.session.userId = user._id;
+                return res.status(201).json({ message: 'Login successful', sessionID: req.sessionID, redirectTo: '/home', generatedCode });
+            } else {
+                logger.log(`Password mismatch for user: ${email}`, user._id, user.username);
+                return res.status(409).json({ error: 'Invalid password' });
+            }
+        });
+    } catch (error) {
+        logger.log(`Error logging in user: ${error.message}`, 'N/A', 'N/A');
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
 };
 
 // Now you can access the generated code using the variable 'generatedCode' anywhere in your program.
