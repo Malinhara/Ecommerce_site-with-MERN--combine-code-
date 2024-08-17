@@ -15,7 +15,7 @@ import React, { useEffect, useState } from "react";
 import { Col } from "react-bootstrap";
 import Button from 'react-bootstrap/Button';
 import './Styles.css';
-
+axios.defaults.withCredentials = true;
 export default function CartCheckout() {
 
   const [products, setProducts] = useState([]);
@@ -50,51 +50,45 @@ export default function CartCheckout() {
 
   const sendData = async () => {
     try {
-      const userEmail = sessionStorage.getItem('userEmail');
-      const sessionID = sessionStorage.getItem('sessionID');
-      
-      // Get savedProducts from cookie
       const savedProducts = Cookies.get('savedProducts');
-  
+      const userEmail = sessionStorage.getItem('userEmail');
+      
       if (savedProducts) {
-        // Parse savedProducts to extract product IDs
         const parsedProducts = JSON.parse(savedProducts);
         const productIds = parsedProducts.map(product => product._id);
-        // Make a POST request to your backend endpoint
+  
         const response = await axios.put('http://localhost:3001/user/buyProduct', {
-          email: userEmail, // Replace with the actual user's email
-          productIds: productIds // Pass the extracted product IDs
+          productIds: productIds,
+          email:userEmail
         }, {
-          headers: {
-            'Session-ID': sessionID // Pass session ID in a custom header
-          }
+          withCredentials: true // This is important for sending cookies
         });
   
-        // Handle the response
         if (response.status === 200) {
           console.log('Products added to user successfully');
           window.location.href = '/Orderstatus';
           alert('Product Bought successfully');
-         
         }
       } else {
         console.error('No savedProducts found in cookie');
         alert('No savedProducts found in cookie');
       }
     } catch (error) {
-      if (error.response && error.response.status === 409) {
-        const errorMessage = error.response.data.error;
-        console.error('Error:', errorMessage);
-        alert(`Error: ${errorMessage}`);
+      if (error.response) {
+        if (error.response.status === 401) {
+          console.error('Unauthorized access:', error.response.data.error);
+          alert('Your session has expired or is invalid. Please log in again.');
+          window.location.href = '/login'; // Redirect to login page
+        } else {
+          console.error('Error:', error.response.data.error);
+          alert(`Error: ${error.response.data.error}`);
+        }
       } else {
         console.error('Error:', error);
         alert('An error occurred while processing your request.');
       }
     }
-  }
-
-
-
+  };
     return (
       <section className="h-100 h-custom" style={{ backgroundColor: "#eee" }}>
         <MDBContainer className="h-100 py-5">
