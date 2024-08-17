@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const Product = require('../model/product model');
 const nodemailer = require('nodemailer');
 const escapeHTML = require('escape-html');
-
+const logger = require('../LogFile/Logger');
 require('dotenv').config();
 
 
@@ -24,8 +24,10 @@ exports.loginUser = async (req, res) => {
       const user = await User.findOne({ email });
 
       if (!user) {
+        logger.log(`User not found for email: ${email}`, 'N/A', 'N/A');
         return res.status(409).json({ error: 'Invalid email or password' });
-      }
+    }
+      
 
       // Validate password
       const [salt, storedHashedPassword] = user.password.split(':');
@@ -34,6 +36,7 @@ exports.loginUser = async (req, res) => {
       if (hashedPassword === storedHashedPassword) {
         req.session.userId = user._id;
         req.session.email = user.email;
+        logger.log(`Password matched successfully`, user._id, user.username);
 
         if (email === process.env.ADMIN_EMAIL) {
           // Generate and send a random code to the admin's email
@@ -56,8 +59,10 @@ exports.loginUser = async (req, res) => {
           transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
               console.error('Error sending email:', error);
+              logger.log(`Error sending email to ${email}: ${error.message}`, user._id, user.username);
             } else {
               console.log('Email sent:', info.response);
+              logger.log(`Email sent to ${email}: ${info.response}`, user._id, user.username);
             }
           });
 
@@ -67,11 +72,13 @@ exports.loginUser = async (req, res) => {
         // Return success response with session ID
         return res.status(201).json({ message: 'Login successful', sessionID: req.sessionID, redirectTo: '/home' });
       } else {
+        logger.log(`Password mismatch for user: ${email}`, user._id, user.username);
         return res.status(409).json({ error: 'Invalid password' });
+        
       }
 
   } catch (error) {
-    console.error('Error logging in:', error);
+    logger.log(`Error logging in user: ${error.message}`, 'N/A', 'N/A');
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
