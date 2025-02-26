@@ -13,7 +13,7 @@
 
 
 
-
+Refer this for Elastic search setup -https://medium.com/@poornamalinhara53/logger-data-analysis-with-elasticsearch-and-kibana-de99116e5404
 
 
 
